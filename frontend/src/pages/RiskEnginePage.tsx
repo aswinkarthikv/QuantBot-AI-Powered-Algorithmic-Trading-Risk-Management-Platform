@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShieldAlert, ShieldCheck, Calculator, AlertTriangle, Scale, Lock } from 'lucide-react';
 import { apiService } from '../services/api';
 import { RiskMetrics } from '../types';
+import { useCurrency } from '../context/CurrencyContext';
 
 export const RiskEnginePage: React.FC = () => {
   const [metrics, setMetrics] = useState<RiskMetrics | null>(null);
@@ -9,6 +10,8 @@ export const RiskEnginePage: React.FC = () => {
   const [winLossRatio, setWinLossRatio] = useState(1.5);
   const [accountBalance, setAccountBalance] = useState(100000);
   const [calcResult, setCalcResult] = useState<any>(null);
+
+  const { formatAmount } = useCurrency();
 
   useEffect(() => {
     const fetchRisk = async () => {
@@ -85,8 +88,8 @@ export const RiskEnginePage: React.FC = () => {
         <div className="bg-quant-card border border-quant-border rounded-xl p-6 shadow-xl">
           <span className="text-xs font-mono text-quant-textMuted uppercase">DAILY LOSS vs SAFETY LIMIT</span>
           <p className="text-3xl font-bold font-mono text-slate-100 mt-1">
-            ${metrics?.daily_loss.toLocaleString() || '450.00'}{' '}
-            <span className="text-xs font-normal text-quant-textMuted">/ ${metrics?.daily_loss_limit.toLocaleString() || '3,500.00'}</span>
+            {formatAmount(metrics?.daily_loss || 450)}{' '}
+            <span className="text-xs font-normal text-quant-textMuted">/ {formatAmount(metrics?.daily_loss_limit || 3500)}</span>
           </p>
           <div className="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
             <div
@@ -110,7 +113,7 @@ export const RiskEnginePage: React.FC = () => {
 
           <form onSubmit={handleCalculateKelly} className="space-y-4 text-xs">
             <div>
-              <label className="block text-slate-400 mb-1">ACCOUNT EQUITY BALANCE ($)</label>
+              <label className="block text-slate-400 mb-1">ACCOUNT EQUITY BALANCE ($ USD)</label>
               <input
                 type="number"
                 value={accountBalance}
@@ -164,8 +167,8 @@ export const RiskEnginePage: React.FC = () => {
                 <span className="text-quant-green font-bold">{calcResult.half_kelly_percent}%</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Recommended Allocation ($):</span>
-                <span className="text-quant-cyan font-bold">${calcResult.recommended_position_usd.toLocaleString()}</span>
+                <span className="text-slate-400">Recommended Allocation:</span>
+                <span className="text-quant-cyan font-bold">{formatAmount(calcResult.recommended_position_usd)}</span>
               </div>
               <p className="text-[11px] text-quant-textMuted pt-2 border-t border-slate-800">{calcResult.risk_assessment_notes}</p>
             </div>

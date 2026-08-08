@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { apiService } from '../services/api';
 import { Asset, Order } from '../types';
+import { useCurrency } from '../context/CurrencyContext';
 
 export const TradingPage: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -22,6 +23,8 @@ export const TradingPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [auditingOrderId, setAuditingOrderId] = useState<number | null>(null);
   const [auditMessage, setAuditMessage] = useState<string | null>(null);
+
+  const { formatAmount } = useCurrency();
 
   const fetchData = async () => {
     try {
@@ -121,7 +124,7 @@ export const TradingPage: React.FC = () => {
                   {isUp ? '+' : ''}{asset.change_24h}%
                 </span>
               </div>
-              <p className="text-sm font-bold text-slate-100">${asset.current_price.toLocaleString()}</p>
+              <p className="text-sm font-bold text-slate-100">{formatAmount(asset.current_price)}</p>
             </button>
           );
         })}
@@ -134,7 +137,7 @@ export const TradingPage: React.FC = () => {
           <div className="flex items-center justify-between border-b border-quant-border pb-3">
             <div>
               <h2 className="text-sm font-bold font-mono text-slate-100">{selectedSymbol} ORDER FORM</h2>
-              <p className="text-xs text-quant-textMuted">Current: ${activeAsset?.current_price.toFixed(2)}</p>
+              <p className="text-xs text-quant-textMuted">Current: {formatAmount(activeAsset?.current_price || 150)}</p>
             </div>
             <span className="px-2 py-0.5 text-[10px] font-mono bg-quant-cyan/10 text-quant-cyan border border-quant-cyan/20 rounded">
               PAPER EXECUTION
@@ -193,7 +196,7 @@ export const TradingPage: React.FC = () => {
 
             {orderType === 'LIMIT' && (
               <div className="font-mono">
-                <label className="block text-xs text-slate-400 mb-1">LIMIT PRICE ($)</label>
+                <label className="block text-xs text-slate-400 mb-1">LIMIT PRICE (USD $)</label>
                 <input
                   type="number"
                   step="any"
@@ -208,7 +211,7 @@ export const TradingPage: React.FC = () => {
             <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800 text-xs font-mono space-y-1.5">
               <div className="flex justify-between text-slate-400">
                 <span>Estimated Value:</span>
-                <span className="text-slate-100 font-bold">${estimatedCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="text-slate-100 font-bold">{formatAmount(estimatedCost)}</span>
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Estimated Slippage:</span>
@@ -235,7 +238,7 @@ export const TradingPage: React.FC = () => {
           <div>
             <div className="flex items-center justify-between border-b border-quant-border pb-3 mb-4">
               <h2 className="text-sm font-bold font-mono text-slate-100">LEVEL 2 ORDER BOOK DEPTH ({selectedSymbol})</h2>
-              <span className="text-xs text-quant-green font-mono">SPREAD: $0.05 (0.02%)</span>
+              <span className="text-xs text-quant-green font-mono">SPREAD: 0.02% (Optimal)</span>
             </div>
 
             {/* Ask / Bid Grid */}
@@ -249,7 +252,7 @@ export const TradingPage: React.FC = () => {
                     const qty = Math.round(150 + idx * 80);
                     return (
                       <div key={idx} className="flex justify-between p-1.5 rounded bg-red-500/5 border border-red-500/10">
-                        <span className="text-quant-red font-bold">${price.toFixed(2)}</span>
+                        <span className="text-quant-red font-bold">{formatAmount(price)}</span>
                         <span className="text-slate-400">{qty} shares</span>
                       </div>
                     );
@@ -266,7 +269,7 @@ export const TradingPage: React.FC = () => {
                     const qty = Math.round(200 + idx * 60);
                     return (
                       <div key={idx} className="flex justify-between p-1.5 rounded bg-emerald-500/5 border border-emerald-500/10">
-                        <span className="text-quant-green font-bold">${price.toFixed(2)}</span>
+                        <span className="text-quant-green font-bold">{formatAmount(price)}</span>
                         <span className="text-slate-400">{qty} shares</span>
                       </div>
                     );
@@ -315,7 +318,7 @@ export const TradingPage: React.FC = () => {
                   </td>
                   <td className="py-3 text-slate-300">{ord.order_type}</td>
                   <td className="py-3 text-slate-200">{ord.quantity}</td>
-                  <td className="py-3 font-bold text-slate-100">${(ord.executed_price || ord.price).toFixed(2)}</td>
+                  <td className="py-3 font-bold text-slate-100">{formatAmount(ord.executed_price || ord.price)}</td>
                   <td className="py-3">
                     <span className="inline-flex items-center gap-1 text-quant-green bg-quant-green/10 border border-quant-green/20 px-2 py-0.5 rounded text-[11px]">
                       <CheckCircle2 className="w-3 h-3" /> EXECUTED

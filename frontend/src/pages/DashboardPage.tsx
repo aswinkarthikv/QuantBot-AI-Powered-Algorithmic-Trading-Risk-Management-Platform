@@ -22,6 +22,7 @@ import {
 } from 'recharts';
 import { apiService } from '../services/api';
 import { Portfolio, Position, Asset } from '../types';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface DashboardPageProps {
   onOpenTradeModal: () => void;
@@ -32,6 +33,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenTradeModal }
   const [positions, setPositions] = useState<Position[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const { formatAmount, exchangeRate, currencySymbol } = useCurrency();
 
   const fetchData = async () => {
     setLoading(true);
@@ -58,12 +61,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenTradeModal }
   const COLORS = ['#06B6D4', '#10B981', '#8B5CF6', '#F59E0B', '#3B82F6'];
 
   const chartData = [
-    { day: 'Jul 01', value: 100000 },
-    { day: 'Jul 07', value: 101200 },
-    { day: 'Jul 14', value: 103500 },
-    { day: 'Jul 21', value: 102800 },
-    { day: 'Jul 28', value: 106400 },
-    { day: 'Aug 04', value: 108450 },
+    { day: 'Jul 01', value: Math.round(100000 * exchangeRate) },
+    { day: 'Jul 07', value: Math.round(101200 * exchangeRate) },
+    { day: 'Jul 14', value: Math.round(103500 * exchangeRate) },
+    { day: 'Jul 21', value: Math.round(102800 * exchangeRate) },
+    { day: 'Jul 28', value: Math.round(106400 * exchangeRate) },
+    { day: 'Aug 04', value: Math.round(108450 * exchangeRate) },
   ];
 
   return (
@@ -105,11 +108,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenTradeModal }
             </div>
           </div>
           <p className="text-2xl font-bold font-mono text-slate-100">
-            ${portfolio?.total_equity.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '108,450.00'}
+            {formatAmount(portfolio?.total_equity || 108450)}
           </p>
           <div className="flex items-center gap-1 mt-2 text-xs font-mono text-quant-green">
             <ArrowUpRight className="w-3.5 h-3.5" />
-            <span>+${portfolio?.total_pnl.toLocaleString() || '8,450.00'} (+{portfolio?.total_pnl_percent.toFixed(2) || '8.45'}%)</span>
+            <span>+{formatAmount(portfolio?.total_pnl || 8450)} (+{portfolio?.total_pnl_percent.toFixed(2) || '8.45'}%)</span>
           </div>
         </div>
 
@@ -122,7 +125,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenTradeModal }
             </div>
           </div>
           <p className="text-2xl font-bold font-mono text-slate-100">
-            ${portfolio?.cash_balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '42,500.00'}
+            {formatAmount(portfolio?.cash_balance || 42500)}
           </p>
           <p className="text-xs text-quant-textMuted font-mono mt-2">
             {(((portfolio?.cash_balance || 42500) / (portfolio?.total_equity || 108450)) * 100).toFixed(1)}% Buying Power
@@ -138,7 +141,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenTradeModal }
             </div>
           </div>
           <p className="text-2xl font-bold font-mono text-quant-green">
-            +${portfolio?.realized_pnl.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '4,177.50'}
+            +{formatAmount(portfolio?.realized_pnl || 4177.5)}
           </p>
           <p className="text-xs text-quant-textMuted font-mono mt-2">Closed Positions Return</p>
         </div>
@@ -152,7 +155,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenTradeModal }
             </div>
           </div>
           <p className="text-2xl font-bold font-mono text-quant-green">
-            +${portfolio?.unrealized_pnl.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '4,272.50'}
+            +{formatAmount(portfolio?.unrealized_pnl || 4272.5)}
           </p>
           <p className="text-xs text-quant-textMuted font-mono mt-2">Open Positions Floating P/L</p>
         </div>
@@ -164,7 +167,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenTradeModal }
         <div className="lg:col-span-2 bg-quant-card border border-quant-border rounded-xl p-6 shadow-xl">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-bold font-mono text-slate-100">PORTFOLIO EQUITY TRAJECTORY</h2>
+              <h2 className="text-sm font-bold font-mono text-slate-100">PORTFOLIO EQUITY TRAJECTORY ({currencySymbol})</h2>
               <p className="text-xs text-quant-textMuted">Historical performance progression</p>
             </div>
             <span className="text-xs font-mono bg-quant-green/10 text-quant-green px-2.5 py-1 rounded border border-quant-green/20">
@@ -182,7 +185,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenTradeModal }
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="day" stroke="#475569" fontSize={11} tickLine={false} />
-                <YAxis stroke="#475569" fontSize={11} tickLine={false} domain={['dataMin - 2000', 'dataMax + 2000']} />
+                <YAxis stroke="#475569" fontSize={11} tickLine={false} domain={['dataMin - 10000', 'dataMax + 10000']} />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#111827', borderColor: '#1F293D', borderRadius: '8px', fontSize: '12px' }}
                 />
@@ -239,7 +242,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenTradeModal }
       {/* Active Positions Table */}
       <div className="bg-quant-card border border-quant-border rounded-xl p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold font-mono text-slate-100">ACTIVE POSITIONS</h2>
+          <h2 className="text-sm font-bold font-mono text-slate-100">ACTIVE POSITIONS ({currencySymbol})</h2>
           <span className="text-xs text-quant-textMuted font-mono">{positions.length} Open Tranches</span>
         </div>
 
@@ -266,9 +269,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenTradeModal }
                       </span>
                     </td>
                     <td className="py-3 text-slate-300">{pos.quantity}</td>
-                    <td className="py-3 text-slate-300">${pos.avg_entry_price.toFixed(2)}</td>
-                    <td className="py-3 text-slate-200 font-semibold">${pos.current_price.toFixed(2)}</td>
-                    <td className="py-3 text-slate-100 font-bold">${pos.total_value.toLocaleString()}</td>
+                    <td className="py-3 text-slate-300">{formatAmount(pos.avg_entry_price)}</td>
+                    <td className="py-3 text-slate-200 font-semibold">{formatAmount(pos.current_price)}</td>
+                    <td className="py-3 text-slate-100 font-bold">{formatAmount(pos.total_value)}</td>
                     <td className="py-3 font-bold">
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded ${
@@ -278,7 +281,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenTradeModal }
                         }`}
                       >
                         {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                        ${pos.unrealized_pnl.toFixed(2)} ({isPositive ? '+' : ''}{pos.unrealized_pnl_percent}%)
+                        {formatAmount(pos.unrealized_pnl)} ({isPositive ? '+' : ''}{pos.unrealized_pnl_percent}%)
                       </span>
                     </td>
                   </tr>

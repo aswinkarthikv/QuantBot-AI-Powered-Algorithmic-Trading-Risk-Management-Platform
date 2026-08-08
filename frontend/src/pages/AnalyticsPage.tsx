@@ -11,9 +11,11 @@ import {
 } from 'recharts';
 import { apiService } from '../services/api';
 import { PerformanceMetrics } from '../types';
+import { useCurrency } from '../context/CurrencyContext';
 
 export const AnalyticsPage: React.FC = () => {
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
+  const { exchangeRate, currencySymbol } = useCurrency();
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -26,6 +28,12 @@ export const AnalyticsPage: React.FC = () => {
     };
     fetchAnalytics();
   }, []);
+
+  const convertedEquityCurve = (metrics?.equity_curve || []).map((pt) => ({
+    timestamp: pt.timestamp,
+    portfolio_value: Math.round(pt.portfolio_value * exchangeRate),
+    benchmark_value: Math.round(pt.benchmark_value * exchangeRate),
+  }));
 
   return (
     <div className="space-y-6">
@@ -79,7 +87,7 @@ export const AnalyticsPage: React.FC = () => {
       <div className="bg-quant-card border border-quant-border rounded-xl p-6 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold font-mono text-slate-100">EQUITY CURVE vs S&P 500 BENCHMARK (SPY)</h2>
+            <h2 className="text-sm font-bold font-mono text-slate-100">EQUITY CURVE vs S&P 500 BENCHMARK (SPY) ({currencySymbol})</h2>
             <p className="text-xs text-quant-textMuted font-mono">Alpha generation trajectory</p>
           </div>
           <span className="text-xs font-mono bg-quant-cyan/10 text-quant-cyan px-2.5 py-1 rounded border border-quant-cyan/20">
@@ -89,7 +97,7 @@ export const AnalyticsPage: React.FC = () => {
 
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={metrics?.equity_curve || []}>
+            <AreaChart data={convertedEquityCurve}>
               <defs>
                 <linearGradient id="colorQuant" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
@@ -97,13 +105,13 @@ export const AnalyticsPage: React.FC = () => {
                 </linearGradient>
               </defs>
               <XAxis dataKey="timestamp" stroke="#475569" fontSize={11} />
-              <YAxis stroke="#475569" fontSize={11} domain={['dataMin - 1000', 'dataMax + 1000']} />
+              <YAxis stroke="#475569" fontSize={11} domain={['dataMin - 10000', 'dataMax + 10000']} />
               <Tooltip
                 contentStyle={{ backgroundColor: '#111827', borderColor: '#1F293D', borderRadius: '8px', fontSize: '12px' }}
               />
               <Legend />
-              <Area type="monotone" dataKey="portfolio_value" stroke="#10B981" strokeWidth={2} name="QuantBot Equity ($)" fill="url(#colorQuant)" />
-              <Area type="monotone" dataKey="benchmark_value" stroke="#64748B" strokeWidth={1} name="SPY Benchmark ($)" fill="transparent" />
+              <Area type="monotone" dataKey="portfolio_value" stroke="#10B981" strokeWidth={2} name={`QuantBot Equity (${currencySymbol})`} fill="url(#colorQuant)" />
+              <Area type="monotone" dataKey="benchmark_value" stroke="#64748B" strokeWidth={1} name={`SPY Benchmark (${currencySymbol})`} fill="transparent" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
